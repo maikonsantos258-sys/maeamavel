@@ -203,10 +203,16 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="telefone">Telefone/Whatsapp:</label>
-            <div class="input-wrapper">
-                <input type="tel" id="telefone" name="telefone" required>
-                <i class="fa-solid fa-phone"></i>
+            <label for="telefone_numero">Telefone/Whatsapp:</label>
+            <div style="display: flex; gap: 8px;">
+                <div class="input-wrapper" style="width: 120px;">
+                    <input type="text" id="codigo_pais" name="codigo_pais" readonly style="text-align: center; padding-left: 15px; background-color: #e9ecef; cursor: not-allowed;">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="input-wrapper" style="flex: 1;">
+                    <input type="tel" id="telefone_numero" name="telefone_numero" required>
+                    <i class="fa-solid fa-phone"></i>
+                </div>
             </div>
             <div id="telefoneValidation" class="validation-message" style="display: none;"></div>
         </div>
@@ -228,11 +234,11 @@
                 <label for="consentimento_nao">Não</label>
             </div>
         </div>
-        <p style="text-align: center; margin-top: 30px;">Assista ao vídeo para saber os próximos passos:</p>
+        <p style="text-align: center; margin-top: 30px;">Assista ao vídeo abaixo para saber os próximos passos:</p>
         <div class="video-container">
             <iframe width="560" height="315" src="https://www.youtube.com/embed/vr6Ehg74m2k?si=HgJVE-3sRUkNKmkv" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
-        <p class="info-text">Após clicar em "CADASTRAR", você será redirecionado para o grupo de WhatsApp 👇</p>
+        <p class="info-text">Após clicar em "Cadastrar", você será redirecionado para o grupo de WhatsApp.</p>
         <button type="submit">Cadastrar</button>
         <p id="loading" style="display: none;">Enviando...</p>
     </form>
@@ -255,41 +261,41 @@
         paisSelect.appendChild(option);
     }
 
-    const telefoneInput = document.getElementById('telefone');
+    const codigoPaisInput = document.getElementById('codigo_pais');
+    const telefoneNumeroInput = document.getElementById('telefone_numero');
     let phoneMask = null;
 
-    // Mascaras de telefone
+    // Mascaras de telefone para o número local
     const maskOptions = {
-        'Brasil': { mask: '(00) 00 00000-0000', placeholder: '(+55) __ _____-____' },
-        'Estados Unidos': { mask: '(0) 0 000 000-0000', placeholder: '(+1) ___ ___-____' },
-        'Canadá': { mask: '(0) 000 000-0000', placeholder: '(+1) ___ ___-____' },
-        'Portugal': { mask: '(000) 000 000 000', placeholder: '(+351) ___ ___ ___' },
-        'França': { mask: '(00) 0 00 00 00 00', placeholder: '(+33) _ __ __ __ __' },
-        'Reino Unido': { mask: '(00) 00 0000 000000', placeholder: '(+44) ____ ___ ___' }
+        'Brasil': { mask: '(00) 00000-0000', placeholder: 'Ex: (11) 98765-4321' },
+        'Portugal': { mask: '000 000 000', placeholder: 'Ex: 912 345 678' },
+        'Estados Unidos': { mask: '000-000-0000', placeholder: 'Ex: 555-123-4567' },
+        'Canadá': { mask: '000-000-0000', placeholder: 'Ex: 555-123-4567' },
+        'França': { mask: '0 00 00 00 00', placeholder: 'Ex: 6 12 34 56 78' },
+        'Reino Unido': { mask: '0000 000000', placeholder: 'Ex: 7123 456789' }
+        // Outros países podem não ter máscara específica e usarão um input normal
     };
 
     paisSelect.addEventListener('change', function() {
         const nomePais = this.options[this.selectedIndex].text;
         const codigo = this.value;
         
-        // Atualiza a máscara de telefone
+        // Limpa o campo de número e atualiza o código do país
+        telefoneNumeroInput.value = '';
+        codigoPaisInput.value = codigo;
+
+        // Atualiza a máscara de telefone para o novo campo
         if (phoneMask) {
             phoneMask.destroy();
         }
         if (nomePais && maskOptions[nomePais]) {
-            telefoneInput.placeholder = maskOptions[nomePais].placeholder;
-            phoneMask = IMask(telefoneInput, { mask: maskOptions[nomePais].mask, lazy: false });
+            telefoneNumeroInput.placeholder = maskOptions[nomePais].placeholder;
+            phoneMask = IMask(telefoneNumeroInput, { mask: maskOptions[nomePais].mask, lazy: false });
         } else {
-            telefoneInput.placeholder = 'Digite seu telefone';
-            phoneMask = null;
+            telefoneNumeroInput.placeholder = 'Digite seu número';
+            phoneMask = null; // Remove a máscara se não houver uma definida
         }
         
-        if(nomePais === 'Brasil') {
-            telefoneInput.value = '55';
-        } else {
-            telefoneInput.value = codigo;
-        }
-
         // Altera dinamicamente o campo de estado
         const estadoWrapper = document.getElementById('estado-wrapper');
         const currentEstadoField = document.getElementById('estado');
@@ -368,32 +374,38 @@
         const estado = document.getElementById('estado').value;
         const cidade = document.getElementById('cidade').value;
         const pais = paisSelect.value;
-        const telefone = telefoneInput.value;
+        const codigoPais = document.getElementById('codigo_pais').value;
+        const telefoneNumero = document.getElementById('telefone_numero').value;
         const consentimento = document.querySelector('input[name="consentimento"]:checked');
         const consagracao = document.querySelector('input[name="anoConsagracao"]:checked');
 
-        if (!nome || !email || !estado || !cidade || !pais || !telefone || !consentimento || !consagracao) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+        if (!nome || !email || !estado || !cidade || !pais || !telefoneNumero || !consentimento || !consagracao) {
+            alert('Por favor, preencha todos os campos obrigatórios, incluindo o telefone.');
             return;
         }
 
+        // Combina o código do país com o número de telefone
+        const telefoneCompleto = codigoPais.replace(/\D/g, '') + telefoneNumero.replace(/\D/g, '');
+
         // Validação do Telefone
         const paisSelecionado = paisSelect.options[paisSelect.selectedIndex].text;
-        const telefoneLimpo = telefone.replace(/\D/g, '');
-        const codigoLimpo = pais.replace(/\D/g, '');
+        const validationDiv = document.getElementById('telefoneValidation');
 
         if (paisSelecionado === 'Brasil') {
-            if (telefoneLimpo.length < 12 || telefoneLimpo.length > 13) { // 55 11 987654321
-                alert('O número de telefone brasileiro deve ter 12 ou 13 dígitos (Ex: 5511987654321).');
+            // Ex: 11 987654321 (11 dígitos) ou 11 23456789 (10 dígitos)
+            if (telefoneNumero.replace(/\D/g, '').length < 10) { 
+                validationDiv.textContent = 'O número de telefone brasileiro deve ter pelo menos 10 dígitos (DDD + número).';
+                validationDiv.style.display = 'block';
                 return;
             }
         } else {
-            if (telefoneLimpo.length <= codigoLimpo.length) {
-                alert('Por favor, insira seu número de telefone completo após o código do país.');
+            if (telefoneNumero.replace(/\D/g, '').length < 5) { // Validação genérica para outros países
+                validationDiv.textContent = 'Por favor, insira um número de telefone válido.';
+                validationDiv.style.display = 'block';
                 return;
             }
         }
-        document.getElementById('telefoneValidation').style.display = 'none';
+        validationDiv.style.display = 'none';
 
         const data = new URLSearchParams();
         data.append('nome', nome);
@@ -401,7 +413,7 @@
         data.append('pais', paisSelecionado);
         data.append('estado', estado);
         data.append('cidade', cidade);
-        data.append('telefone', telefone);
+        data.append('telefone', telefoneCompleto); // Envia o número combinado
         data.append('anoConsagracao', consagracao.value);
         data.append('consentimento', consentimento.value);
 
